@@ -215,10 +215,10 @@
 -- LIMIT 5;
 
 -- c. Which drugs appear in the top five prescribed for both Family Practice prescribers and Cardiologists? Combine what you did for parts a and b into a single query to answer this question.
-SELECT fam.generic AS fam_practice_drug,
-fam.total AS Total,
-cardi.generic AS cardio_drug,
-cardi.total AS Total
+SELECT fam.generic_name AS fam_practice_drug,
+fam.sum_of_prescription AS Total,
+cardi.generic_name AS cardio_drug,
+cardi.sum_of_prescription AS Total
 
 FROM (SELECT generic_name, SUM(total_claim_count) as sum_of_prescription
 FROM prescription
@@ -231,7 +231,7 @@ GROUP BY generic_name
 ORDER BY sum_of_prescription DESC
 LIMIT 5) AS cardi
 
-INNER JOIN (SELECT generic_name AS fam_practice_drug, SUM(total_claim_count) as sum_of_prescription
+INNER JOIN (SELECT generic_name, SUM(total_claim_count) as sum_of_prescription
 FROM prescription
 LEFT JOIN prescriber
 USING (npi)
@@ -240,7 +240,8 @@ USING (drug_name)
 WHERE specialty_description = 'Family Practice'
 GROUP BY generic_name
 ORDER BY sum_of_prescription DESC
-LIMIT 5) AS fam;
+LIMIT 5) AS fam
+USING (generic_name);
 
 --3. Your goal in this question is to generate a list of the top prescribers in each of the major metropolitan areas of Tennessee. 
 
