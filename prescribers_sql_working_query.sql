@@ -43,11 +43,12 @@
 
 -- c. Challenge Question: Are there any specialties that appear in the prescriber table that have no associated prescriptions in the prescription table?
 -- SELECT specialty_description
--- FROM prescriber AS A
--- LEFT JOIN prescription AS B
--- ON A.npi = B.npi
--- WHERE B.npi IS NULL;
---ANSWER: ?
+-- FROM prescriber
+-- LEFT JOIN prescription
+-- USING (npi)
+-- GROUP BY specialty_description
+-- HAVING COUNT(total_claim_count) = 0;
+--ANSWER: 15
 
 -- 3.
 -- a. Which drug (generic_name) had the highest total drug cost?
@@ -70,11 +71,41 @@
 
 -- 4.
 -- a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs.
-SELECT drug_name,
-	CASE 
-		WHEN opioid_drug_flag = 'Y' THEN 'opioid'
-		WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic'
-		ELSE 'neither'
-	END AS drug_type
-FROM drug;
+-- SELECT drug_name,
+-- 	CASE 
+-- 		WHEN opioid_drug_flag = 'Y' THEN 'opioid'
+-- 		WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic'
+-- 		ELSE 'neither'
+-- 	END AS drug_type
+-- FROM drug;
 --b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.
+-- SELECT CASE 
+-- 	WHEN opioid_drug_flag = 'Y' THEN 'opioid'
+-- 	WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic'
+-- 	ELSE 'neither'
+-- END AS drug_type, SUM(p.total_drug_cost::MONEY) AS total_drug_cost
+-- FROM prescription as p
+-- LEFT JOIN drug AS d
+-- USING (drug_name)
+-- GROUP BY drug_type
+-- ORDER BY total_drug_cost DESC;
+-- ANSWER: Neither -- $2,972,698,710.23
+
+-- 5. 
+--a. How many CBSAs are in Tennessee? Warning: The cbsa table contains information for all states, not just Tennessee.
+-- SELECT COUNT(cbsa)
+-- FROM cbsa
+-- INNER JOIN fips_county
+-- USING (fipscounty)
+-- WHERE state = 'TN';
+--ANSWER: 42 in the state of TN
+
+--b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
+-- SELECT cbsa, SUM(population) as total_population
+-- FROM population
+-- LEFT JOIN cbsa
+-- USING (fipscounty)
+-- GROUP BY cbsa
+-- ORDER BY total_population DESC
+-- LIMIT 1;
+--c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.
