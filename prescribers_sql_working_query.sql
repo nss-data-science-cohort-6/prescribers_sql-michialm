@@ -162,6 +162,14 @@
 -- AND opioid_drug_flag = 'Y';
 
 -- b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
+-- SELECT pr.npi, drug.drug_name, total_claim_count
+-- FROM prescriber AS pr
+-- CROSS JOIN drug 
+-- FULL JOIN prescription USING(npi, drug_name)
+-- WHERE specialty_description = 'Pain Management'
+-- AND pr.nppes_provider_city = 'NASHVILLE'
+-- AND opioid_drug_flag = 'Y';
+
 
 -- c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
 -- SELECT pr.npi, drug.drug_name, COALESCE(total_claim_count,0)
@@ -172,6 +180,77 @@
 -- AND pr.nppes_provider_city = 'NASHVILLE'
 -- AND opioid_drug_flag = 'Y';
 
+--Part 2
+-- 1. How many npi numbers appear in the prescriber table but not in the prescription table?
+-- SELECT COUNT(DISTINCT npi)
+-- FROM prescriber 
+-- LEFT JOIN prescription AS rx
+-- USING (npi)
+-- WHERE rx.npi IS NULL;
+-- ANSWER: 4,458
+
+-- 2.
+-- a. Find the top five drugs (generic_name) prescribed by prescribers with the specialty of Family Practice.
+-- SELECT generic_name, SUM(total_claim_count) as sum_of_prescription
+-- FROM prescription
+-- LEFT JOIN prescriber
+-- USING (npi)
+-- LEFT JOIN drug
+-- USING (drug_name)
+-- WHERE specialty_description = 'Family Practice'
+-- GROUP BY generic_name
+-- ORDER BY sum_of_prescription DESC
+-- LIMIT 5;
+
+-- b. Find the top five drugs (generic_name) prescribed by prescribers with the specialty of Cardiology.
+-- SELECT generic_name, SUM(total_claim_count) as sum_of_prescription
+-- FROM prescription
+-- LEFT JOIN prescriber
+-- USING (npi)
+-- LEFT JOIN drug
+-- USING (drug_name)
+-- WHERE specialty_description = 'Cardiology'
+-- GROUP BY generic_name
+-- ORDER BY sum_of_prescription DESC
+-- LIMIT 5;
+
+-- c. Which drugs appear in the top five prescribed for both Family Practice prescribers and Cardiologists? Combine what you did for parts a and b into a single query to answer this question.
+SELECT fam.generic AS fam_practice_drug,
+fam.total AS Total,
+cardi.generic AS cardio_drug,
+cardi.total AS Total
+
+FROM (SELECT generic_name, SUM(total_claim_count) as sum_of_prescription
+FROM prescription
+LEFT JOIN prescriber
+USING (npi)
+INNER JOIN drug
+USING (drug_name)
+WHERE specialty_description = 'Cardiology'
+GROUP BY generic_name
+ORDER BY sum_of_prescription DESC
+LIMIT 5) AS cardi
+
+INNER JOIN (SELECT generic_name AS fam_practice_drug, SUM(total_claim_count) as sum_of_prescription
+FROM prescription
+LEFT JOIN prescriber
+USING (npi)
+INNER JOIN drug
+USING (drug_name)
+WHERE specialty_description = 'Family Practice'
+GROUP BY generic_name
+ORDER BY sum_of_prescription DESC
+LIMIT 5) AS fam;
+
+--3. Your goal in this question is to generate a list of the top prescribers in each of the major metropolitan areas of Tennessee. 
+
+-- a. First, write a query that finds the top 5 prescribers in Nashville in terms of the total number of claims (total_claim_count) across all drugs. Report the npi, the total number of claims, and include a column showing the city. 
+
+
+-- b. Now, report the same for Memphis. 
+
+
+-- c. Combine your results from a and b, along with the results for Knoxville and Chattanooga.
 
 
 
