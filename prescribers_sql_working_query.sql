@@ -71,7 +71,7 @@
 
 -- 4.
 -- a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs.
--- SELECT drug_name,
+-- SELECT DISTINCT drug_name,
 -- 	CASE 
 -- 		WHEN opioid_drug_flag = 'Y' THEN 'opioid'
 -- 		WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic'
@@ -93,12 +93,12 @@
 
 -- 5. 
 --a. How many CBSAs are in Tennessee? Warning: The cbsa table contains information for all states, not just Tennessee.
--- SELECT COUNT(cbsa)
+-- SELECT DISTINCT cbsa, cbsaname
 -- FROM cbsa
 -- INNER JOIN fips_county
 -- USING (fipscounty)
 -- WHERE state = 'TN';
---ANSWER: 42 in the state of TN
+--ANSWER: 10 in the state of TN
 
 --b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
 -- SELECT cbsa, SUM(population) as total_population
@@ -109,3 +109,76 @@
 -- ORDER BY total_population DESC
 -- LIMIT 1;
 --c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.
+-- SELECT p.population, fc.county
+-- FROM population as p
+-- LEFT JOIN fips_county as fc
+-- 	ON p.fipscounty = fc.fipscounty
+-- LEFT JOIN cbsa as c
+-- 	ON c.fipscounty = fc.fipscounty
+-- WHERE c.fipscounty IS NULL
+-- ORDER BY p.population DESC;
+
+-- 6.
+-- a. Find all rows in the prescription table where total_claims is at least 3000. Report the drug_name and the total_claim_count.
+-- SELECT *
+-- FROM prescription
+-- WHERE total_claim_count >= 3000;
+
+-- b. For each instance that you found in part a, add a column that indicates whether the drug is an opioid.
+-- SELECT fd.drug_name, B.total_claim_count,
+-- 	(CASE WHEN opioid_drug_flag = 'Y' THEN 'opioid_YES'
+-- 	 ELSE 'opioid_NO'
+-- 	 END) AS drug_type
+-- 	 FROM drug AS fd
+-- LEFT JOIN prescription AS B
+-- 	ON fd.drug_name = B.drug_name
+-- WHERE B.total_claim_count >= 3000
+-- ORDER BY B.total_claim_count DESC;
+
+-- c. Add another column to you answer from the previous part which gives the prescriber first and last name associated with each row.
+-- SELECT P.nppes_provider_first_name, p.nppes_provider_last_name, fd.drug_name, B.total_claim_count,
+-- 	(CASE WHEN opioid_drug_flag = 'Y' THEN 'opioid_YES'
+-- 	 ELSE 'opioid_NO'
+-- 	 END) AS drug_type
+-- 	 FROM drug AS fd
+-- LEFT JOIN prescription AS B
+-- 	ON fd.drug_name = B.drug_name
+-- LEFT JOIN prescriber AS P
+-- WHERE B.total_claim_count >= 3000
+-- GROUP BY P.nppes_provider_first_name, p.nppes_provider_last_name
+-- ORDER BY B.total_claim_count DESC;
+
+
+-- 7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville and the number of claims they had for each opioid. Hint: The results from all 3 parts will have 637 rows.
+
+-- a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Managment') in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). Warning: Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.
+-- SELECT pr.npi  , drug.drug_name
+-- FROM prescriber AS pr
+
+-- CROSS JOIN drug 
+
+-- WHERE specialty_description = 'Pain Management'
+-- AND pr.nppes_provider_city = 'NASHVILLE'
+-- AND opioid_drug_flag = 'Y';
+
+-- b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count).
+
+-- c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.
+-- SELECT pr.npi, drug.drug_name, COALESCE(total_claim_count,0)
+-- FROM prescriber AS pr
+-- CROSS JOIN drug 
+-- FULL JOIN prescription USING(npi, drug_name)
+-- WHERE specialty_description = 'Pain Management'
+-- AND pr.nppes_provider_city = 'NASHVILLE'
+-- AND opioid_drug_flag = 'Y';
+
+
+
+
+
+
+
+
+
+
+
